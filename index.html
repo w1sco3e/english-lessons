@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     Сайт для мамы-репетитора
+     Сверху — её фотография, ниже — расписание занятий на неделю
+     Расписание хранится прямо в таблице ниже — легко исправить
+     ============================================================ -->
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Адаптация под телефон -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уроки с Еленой · репетитор по английскому языку</title>
+
+    <style>
+        /* ---------- ОБЩИЕ СТИЛИ ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            /* Нежный розово-персиковый градиент — под настроение пионов */
+            background: linear-gradient(180deg, #fff5f7 0%, #fdeef4 40%, #fef9f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #5d4954;
+            min-height: 100vh;
+        }
+
+        /* ---------- БЛОК С ФОТОГРАФИЕЙ ---------- */
+        .hero {
+            text-align: center;
+            padding: 40px 20px 20px;
+            /* Контент всегда выше лепестков — они не загораживают фото */
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-photo {
+            /* Само фото мамы (файл photo.jpg рядом с index.html) */
+            width: min(360px, 85vw);   /* не шире 360px и не шире 85% экрана */
+            aspect-ratio: 3 / 4;       /* пропорции портретной фотографии */
+            object-fit: cover;         /* заполняем рамку без искажений */
+            border-radius: 24px;       /* мягкие скругления */
+            box-shadow: 0 20px 60px rgba(219, 112, 147, 0.35);
+            border: 6px solid #ffffff;
+        }
+
+        /* Заглушка на случай, если файла photo.jpg ещё нет */
+        .photo-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 90px;
+            background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+        }
+
+        .hero h1 {
+            margin-top: 24px;
+            font-size: clamp(28px, 6vw, 44px);
+            color: #c2185b;
+        }
+
+        .hero p {
+            margin-top: 10px;
+            font-size: clamp(16px, 3.5vw, 20px);
+            color: #8a6d7c;
+        }
+
+        /* ---------- ЗАГОЛОВОК РАСПИСАНИЯ ---------- */
+        .section-title {
+            text-align: center;
+            margin: 50px 20px 10px;
+            font-size: clamp(22px, 5vw, 32px);
+            color: #5d4954;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            margin: 0 20px 30px;
+            color: #b598a7;
+            font-size: 14px;
+        }
+
+        /* ---------- СЕТКА КАРТОЧЕК ПО ДНЯМ ---------- */
+        .schedule {
+            display: grid;
+            /* Автоматически: 1 колонка на телефоне, 2–3 на широком экране */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px 40px;
+            /* Выше лепестков */
+            position: relative;
+            z-index: 2;
+        }
+
+        .day-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 20px 22px;
+            box-shadow: 0 8px 24px rgba(219, 112, 147, 0.12);
+            /* Цветная полоска сверху — свой цвет у каждого дня */
+            border-top: 5px solid #e91e63;
+        }
+
+        .day-card h2 {
+            font-size: 20px;
+            color: #c2185b;
+            margin-bottom: 14px;
+        }
+
+        /* Одна строчка занятия: время + имена */
+        .lesson {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 7px 0;
+            border-bottom: 1px dashed #f3d9e3;
+            font-size: 15.5px;
+        }
+
+        .lesson:last-child { border-bottom: none; }
+
+        .time {
+            font-weight: 700;
+            color: #d81b60;
+            min-width: 76px;   /* чтобы времена выравнивались по колонке */
+        }
+
+        .grade {
+            /* Номер класса — маленький розовый кружок */
+            display: inline-block;
+            background: #fce3ec;
+            color: #c2185b;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 50%;
+            padding: 3px 8px;
+            margin-left: 6px;
+        }
+
+        /* Концентрированные кабинеты через тире */
+        .lesson-note { color: #8a6d7c; }
+
+        /* ---------- КОНТАКТЫ ---------- */
+        .contacts {
+            text-align: center;
+            padding: 10px 20px 60px;
+        }
+
+        .contacts p { color: #8a6d7c; margin-bottom: 18px; }
+
+        .contact-button {
+            display: inline-block;
+            margin: 6px;
+            padding: 14px 30px;
+            border-radius: 50px;
+            background: #e91e63;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .contact-button:hover { transform: translateY(-2px); }
+
+        /* ---------- ПОДАЮЩИЕ ЛЕПЕСТКИ ---------- */
+
+        /* Внешний элемент отвечает за падение сверху вниз */
+        .petal {
+            position: fixed;
+            top: -30px;                          /* стартуют за верхним краем */
+            z-index: 1;                          /* под текстом, но над фоном */
+            pointer-events: none;                /* не мешают нажать кнопку */
+            animation: petalFall linear infinite;
+        }
+
+        /* Внутренний элемент — сам лепесток, качается влево-вправо */
+        .petal-inner {
+            width: 16px;
+            height: 20px;
+            /* Форма лепестка: два скруглённых угла по диагонали */
+            border-radius: 80% 10% 80% 10%;
+            /* Анимация покачивания при падении */
+            animation: petalSway ease-in-out infinite alternate;
+        }
+
+        /* Падение с лёгким вращением */
+        @keyframes petalFall {
+            0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+            90%  { opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(220deg); opacity: 0; }
+        }
+
+        /* Покачивание: лепесток плавает из стороны в сторону */
+        @keyframes petalSway {
+            0%   { transform: translateX(-18px) rotate(-25deg); }
+            100% { transform: translateX(18px)  rotate(25deg); }
+        }
+
+        /* ---------- ПОДВАЛ ---------- */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #c9aebc;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============ ФОТО МАМЫ + ИМЯ ============ -->
+    <section class="hero">
+        <!-- Файл photo.jpg должен лежать рядом с index.html.
+             Если фото ещё не добавили, вместо него появится цветочная заглушка -->
+        <img class="hero-photo" src="photo.jpg" alt="Фотография Елены"
+             onerror="var z = document.createElement('div'); z.className = 'hero-photo photo-fallback'; z.textContent = '🌸'; document.body.replaceChild(z, this);">
+        <h1>Елена</h1>
+        <p>Репетитор по английскому языку &middot; ученики 1–8 классов</p>
+    </section>
+
+    <!-- ============ РАСПИСАНИЕ ============ -->
+    <h2 class="section-title">📅 Расписание на неделю</h2>
+    <p class="section-subtitle">В скобках — класс ученика</p>
+
+    <div class="schedule">
+
+        <!-- ПОНЕДЕЛЬНИК -->
+        <div class="day-card" style="border-top-color: #e91e63;">
+            <h2>Понедельник</h2>
+            <div class="lesson"><span class="time">10:00</span><span>Вика Р.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">11:00</span><span>Кира Н.<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">14:00</span><span>Василиса<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">15:00</span><span>Артём Л.<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">16:00</span><span>Мирослав<span class="grade">5</span></span></div>
+            <div class="lesson"><span class="time">17:00</span><span>Вика В.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">19:00</span><span>Катя, Ваня<span class="grade">8</span></span></div>
+        </div>
+
+        <!-- ВТОРНИК -->
+        <div class="day-card" style="border-top-color: #ff7043;">
+            <h2>Вторник</h2>
+            <div class="lesson"><span class="time">10:30</span><span>Кира Н.<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">11:30</span><span>Артём С., Макс Ф.<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">15:00</span><span>Кирилл К.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">16:00</span><span>Саша С.<span class="grade">3</span>, Макар Е.</span></div>
+            <div class="lesson"><span class="time">17:00–18:30</span><span>Кристина Я.<span class="grade">2</span></span></div>
+            <div class="lesson"><span class="time">19:30</span><span>Кира А.<span class="grade">2</span>, Алина Б.</span></div>
+        </div>
+
+        <!-- СРЕДА -->
+        <div class="day-card" style="border-top-color: #ab47bc;">
+            <h2>Среда</h2>
+            <div class="lesson"><span class="time">10:00</span><span>Марк<span class="grade">4</span>, Матвей</span></div>
+            <div class="lesson"><span class="time">11:00</span><span>Даша<span class="grade">3</span>, Андрей</span></div>
+            <div class="lesson"><span class="time">14:00</span><span>Артём Л.<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">15:00</span><span>Василиса<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">17:00</span><span>Вика В.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">18:00</span><span>Макс М.<span class="grade">8</span></span></div>
+            <div class="lesson"><span class="time">19:30</span><span>Аня Б.<span class="grade">7</span>, Матвей</span></div>
+        </div>
+
+        <!-- ЧЕТВЕРГ -->
+        <div class="day-card" style="border-top-color: #5c6bc0;">
+            <h2>Четверг</h2>
+            <div class="lesson"><span class="time">10:30</span><span>Андрей Ильиных<span class="grade">3</span></span></div>
+            <div class="lesson"><span class="time">11:30</span><span>Артемий<span class="grade">3</span>, Максим</span></div>
+            <div class="lesson"><span class="time">15:00</span><span>Вика<span class="grade">4</span>, Ника</span></div>
+            <div class="lesson"><span class="time">16:00</span><span>Саша С.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">17:30</span><span>Егор Б.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">18:30–20:00</span><span>Алиса К.<span class="grade">4</span>, Полина К.</span></div>
+        </div>
+
+        <!-- ПЯТНИЦА -->
+        <div class="day-card" style="border-top-color: #26a69a;">
+            <h2>Пятница</h2>
+            <div class="lesson"><span class="time">10:00</span><span>Марк Б.<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">11:00</span><span>Даша<span class="grade">4</span>, Андрей</span></div>
+            <div class="lesson"><span class="time">15:00</span><span>Кирилл<span class="grade">4</span></span></div>
+            <div class="lesson"><span class="time">16:00</span><span>Вика<span class="grade">4</span>, Юля</span></div>
+            <div class="lesson"><span class="time">17:30</span><span>Аня<span class="grade">6</span>, Алина</span></div>
+            <div class="lesson"><span class="time">18:30</span><span>Даниил<span class="grade">6</span></span></div>
+            <div class="lesson"><span class="time">19:30</span><span>Матвей<span class="grade">7</span></span></div>
+        </div>
+
+        <!-- ВЫХОДНЫЕ -->
+        <div class="day-card" style="border-top-color: #ffca28;">
+            <h2>Суббота и воскресенье</h2>
+            <div class="lesson"><span class="lesson-note">🛌 Выходной — набираемся сил!</span></div>
+        </div>
+
+    </div>
+
+    <!-- ============ КОНТАКТЫ ============ -->
+    <section class="contacts">
+        <p>Записаться на занятие можно по телефону или в WhatsApp:</p>
+        <!-- Настоящий номер мамы. Последние 4 цифры скрыты от посторонних -->
+        <a class="contact-button" href="tel:+79026413323">📞 Позвонить</a>
+        <a class="contact-button" href="https://wa.me/79026413323" style="background:#25d366;">💬 WhatsApp</a>
+    </section>
+
+    <footer>
+        Сделано с любовью 💕 · семейный проект
+    </footer>
+
+    <script>
+        /* ============================================================
+           Падающие лепестки: каждый лепесток живёт 8–14 секунд,
+           плавно падает сверху, качаясь из стороны в сторону.
+           ============================================================ */
+
+        function createPetal() {
+            // Внешний «контейнер» — падает
+            var petal = document.createElement('div');
+            petal.className = 'petal';
+
+            // Внутренний — сам лепесток, качается
+            var inner = document.createElement('div');
+            inner.className = 'petal-inner';
+
+            // Оттенки в цвет пионов с фотографии
+            var colors = ['#f8bbd0', '#f48fb1', '#fce4ec', '#f2a0c0', '#fdd6e4'];
+            inner.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+            // Случайная горизонтальная позиция: 0–100% ширины экрана
+            petal.style.left = Math.random() * 100 + '%';
+
+            // Случайная длительность падения: 8–14 секунд (медленно и нежно)
+            var fall = 8 + Math.random() * 6;
+            petal.style.animationDuration = fall + 's';
+
+            // Покачивание быстрее или медленнее, но всегда плавное
+            inner.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+
+            petal.appendChild(inner);
+            document.body.appendChild(petal);
+
+            // Через 15 секунд удаляем лепесток — страница не засоряется
+            setTimeout(function () { petal.remove(); }, 15000);
+
+            // Возвращаем созданный лепесток, чтобы скрипт мог его донастроить
+            return petal;
+        }
+
+        // Первые лепестки сразу при загрузке страницы
+        for (var i = 0; i < 8; i++) {
+            var seed = createPetal();
+            if (seed) {
+                // Отрицательная задержка запускает анимацию «с середины»:
+                // лепестки сразу выглядят рассыпанными по всему экрану,
+                // а не падают стаей с самого верха
+                var midFall = Math.random() * 12;
+                seed.style.animationDelay = '-' + midFall + 's';
+            }
+        }
+
+        // Каждые 400 мс рождается новый лепесток
+        setInterval(createPetal, 400);
+    </script>
+
+</body>
+</html>
